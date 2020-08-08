@@ -1,0 +1,33 @@
+version: "3.7"
+
+volumes:
+  mongo_data:
+
+services:
+  api:
+    container_name: api
+    image: typescript/express-api:latest
+    build:
+      context: ./services/api
+      dockerfile: ./deployments/api.dev.dockerfile
+      args:
+        VERSION: "v14.2.0"
+    env_file: ./services/config/env/api.dev.env
+    ports:
+      - 4000:4000
+    volumes:
+      - type: bind
+        source: ./services/api
+        target: /app
+    restart: on-failure
+    depends_on:
+      - db
+  db:
+    image: mongo:4
+    container_name: db
+    ports:
+      - 27017:27017
+    volumes:
+      - type: volume
+        source: mongo_data
+        target: /data/db
