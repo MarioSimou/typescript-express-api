@@ -1,26 +1,24 @@
 import express from 'express'
 import * as i from 'src/controllers/utils/interfaces'
 import User from 'src/models/User'
-import { BadRequest, NotFound } from 'src/controllers/utils/errors'
+import * as middlewares from 'src/controllers/utils/middlewares'
+import Joi from '@hapi/joi'
+import { UserRole } from 'src/controllers/utils/enums'
 
-const ErrRequestBodyInvalid = 'Invalid request body'
-const ErrDocumentNotFound = 'Document not found'
+const requestParamsValidationSchema = Joi.object({
+    id: Joi.string().required().hex().length(24)
+})
+
+const requestBodyValidationSchema = Joi.object({
+    username: Joi.string(),
+    email: Joi.string().email(),
+    password: Joi.string().regex(/.{8}$/),
+    role: Joi.valid(UserRole.Admin, UserRole.Basic)
+}).or('username', 'email', 'password', 'role')
 
 const putUser = async (req: express.Request<any, i.Response>, res: express.Response, next: express.NextFunction) => {
     try {
-        const id: string = req.params.id
-        const body: any = req.body
-        if(!id){
-            throw BadRequest(ErrRequestBodyInvalid)
-        }
-        if(!body || Object.values(body).length === 0){
-            throw BadRequest(ErrRequestBodyInvalid)
-        }
-
-        const user = await User.findByIdAndUpdate(id, body, {new: true})
-        if(!user){
-            throw NotFound(ErrDocumentNotFound)
-        }
+        const user = await User.findByIdAndUpdate(req.params.id, req.body, {new: true})
 
         const response: i.Response = {
             status: 200,
@@ -33,4 +31,8 @@ const putUser = async (req: express.Request<any, i.Response>, res: express.Respo
     }
 } 
 
-export default putUser
+export default middlewares.handleMiddlewares(
+    middlewares.validateRequestParams(requestParamsValidationSchema),
+    middlewares.validateRequestBody(requestBodyValidationSchema),
+    middlewares.userLookup((req: express.Request) => req.params.id),
+)(putUser)

@@ -1,24 +1,16 @@
 import express from 'express'
 import * as i from 'src/controllers/utils/interfaces'
 import User from 'src/models/User'
-import { BadRequest, NotFound } from 'src/controllers/utils/errors'
+import Joi from '@hapi/joi'
+import * as middlewares from 'src/controllers/utils/middlewares'
 
-const ErrRequestBodyInvalid = 'Invalid request body'
-const ErrDocumentNotFound = 'Document not found'
+const requestParamsValidationSchema = Joi.object({
+    id: Joi.string().required().hex().length(24)
+})
 
 const getUser = async (req: express.Request<any, i.Response>, res: express.Response, next: express.NextFunction) => {
     try {
-        const id: string = req.params.id
-
-        if(!id){
-            throw BadRequest(ErrRequestBodyInvalid)
-        }
-        // improve validation with hapi
-        const user = await User.findById(id)
-
-        if(!user){
-            throw NotFound(ErrDocumentNotFound)
-        }
+        const user = await User.findById(req.params.id)
 
         const response: i.Response = {
             status: 200,
@@ -31,4 +23,7 @@ const getUser = async (req: express.Request<any, i.Response>, res: express.Respo
     }
 } 
 
-export default getUser
+export default middlewares.handleMiddlewares(
+    middlewares.validateRequestParams(requestParamsValidationSchema),
+    middlewares.userLookup((req: express.Request) => req.params.id),
+)(getUser)

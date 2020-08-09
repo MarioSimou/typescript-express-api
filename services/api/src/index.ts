@@ -16,6 +16,7 @@ app.use(errorHandler)
         useNewUrlParser: true,
         useUnifiedTopology: true,
         useCreateIndex: true,
+        useFindAndModify: false,
     }
     await mongoose.connect(dbUri, dbOptions)
 
