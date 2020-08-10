@@ -1,8 +1,10 @@
 import express from 'express'
 import * as i from 'src/controllers/utils/interfaces'
 import User from 'src/models/User'
+import { RequestInterface } from 'src/types'
+import * as middlewares from 'src/controllers/utils/middlewares'
 
-const getUsers = async (req: express.Request<any, i.Response>, res: express.Response, next: express.NextFunction) => {
+const getUsers = async (req: RequestInterface, res: express.Response, next: express.NextFunction) => {
     try {
         // improve validation with hapi
         const users = await User.find()
@@ -18,4 +20,6 @@ const getUsers = async (req: express.Request<any, i.Response>, res: express.Resp
     }
 } 
 
-export default getUsers
+export default middlewares.handleMiddlewares(
+    middlewares.validateUserToken,
+)(getUsers)

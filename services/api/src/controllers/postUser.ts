@@ -4,6 +4,8 @@ import * as i from 'src/controllers/utils/interfaces'
 import User from 'src/models/User'
 import Joi from '@hapi/joi'
 import * as middlewares from 'src/controllers/utils/middlewares'
+import jwt from 'jsonwebtoken'
+import { RequestInterface } from 'src/types'
 
 export const UserValidationSchema = Joi.object({
     username: Joi.string().required(),
@@ -12,14 +14,27 @@ export const UserValidationSchema = Joi.object({
     role: Joi.string().default(UserRole.Basic).valid(UserRole.Basic, UserRole.Admin)
 })
 
-const postUser = async (req: express.Request<any, i.Response>, res: express.Response, next: express.NextFunction) => {
+const postUser = async (req: RequestInterface, res: express.Response, next: express.NextFunction) => {
     try {
         const user = await User.create(req.body)
+
+        const payload = { 
+            email: user.email,
+            role: user.role,
+        }
+        const jwtOptions: jwt.SignOptions = {
+            expiresIn: '1d'
+        }
+        const jwtSecret: string = <string>process.env.JWT_SECRET
+        const token: string = jwt.sign(payload, jwtSecret, jwtOptions)
 
         const response: i.Response = {
             status: 201,
             success: true,
-            data: user
+            data: {
+                user,
+                token,
+            }
         }
 
         const resourceLocation: string = `${req.url}/${user.id}` 

@@ -1,5 +1,6 @@
 enum StatusCodes {
     BadRequest = 400,
+    Unauthorized = 401,
     NotFound = 404,
     InternalServerError = 500,
 }
@@ -30,3 +31,4 @@ export class GenericError implements ErrorInterface {
 export const BadRequest = (message: string): GenericError => new GenericError(message, StatusCodes.BadRequest)
 export const InternalServerError = (message: string): GenericError => new GenericError(message, StatusCodes.InternalServerError)
 export const NotFound = (message: string): GenericError => new GenericError(message, StatusCodes.NotFound)
+export const Unauthorized = (message: string): GenericError => new GenericError(message, StatusCodes.Unauthorized)

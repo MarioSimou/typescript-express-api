@@ -3,12 +3,13 @@ import * as i from 'src/controllers/utils/interfaces'
 import User from 'src/models/User'
 import Joi from '@hapi/joi'
 import * as middlewares from 'src/controllers/utils/middlewares'
+import { RequestInterface } from 'src/types'
 
 const requestParamsValidationSchema = Joi.object({
     id: Joi.string().required().hex().length(24)
 })
 
-const getUser = async (req: express.Request<any, i.Response>, res: express.Response, next: express.NextFunction) => {
+const getUser = async (req: RequestInterface, res: express.Response, next: express.NextFunction) => {
     try {
         const user = await User.findById(req.params.id)
 
@@ -25,5 +26,6 @@ const getUser = async (req: express.Request<any, i.Response>, res: express.Respo
 
 export default middlewares.handleMiddlewares(
     middlewares.validateRequestParams(requestParamsValidationSchema),
-    middlewares.userLookup((req: express.Request) => req.params.id),
+    middlewares.validateUserToken,
+    middlewares.userLookup((req: RequestInterface) => req.params.id),
 )(getUser)

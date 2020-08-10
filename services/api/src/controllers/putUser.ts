@@ -4,6 +4,7 @@ import User from 'src/models/User'
 import * as middlewares from 'src/controllers/utils/middlewares'
 import Joi from '@hapi/joi'
 import { UserRole } from 'src/controllers/utils/enums'
+import { RequestInterface } from 'src/types'
 
 const requestParamsValidationSchema = Joi.object({
     id: Joi.string().required().hex().length(24)
@@ -16,7 +17,7 @@ const requestBodyValidationSchema = Joi.object({
     role: Joi.valid(UserRole.Admin, UserRole.Basic)
 }).or('username', 'email', 'password', 'role')
 
-const putUser = async (req: express.Request<any, i.Response>, res: express.Response, next: express.NextFunction) => {
+const putUser = async (req: RequestInterface, res: express.Response, next: express.NextFunction) => {
     try {
         const user = await User.findByIdAndUpdate(req.params.id, req.body, {new: true})
 
@@ -34,5 +35,6 @@ const putUser = async (req: express.Request<any, i.Response>, res: express.Respo
 export default middlewares.handleMiddlewares(
     middlewares.validateRequestParams(requestParamsValidationSchema),
     middlewares.validateRequestBody(requestBodyValidationSchema),
-    middlewares.userLookup((req: express.Request) => req.params.id),
+    middlewares.validateUserToken,
+    middlewares.userLookup((req: RequestInterface) => req.params.id),
 )(putUser)
