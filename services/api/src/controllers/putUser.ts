@@ -37,4 +37,5 @@ export default middlewares.handleMiddlewares(
     middlewares.validateRequestBody(requestBodyValidationSchema),
     middlewares.validateUserToken,
     middlewares.userLookup((req: RequestInterface) => req.params.id),
+    middlewares.validatePutDeleteRole,
 )(putUser)

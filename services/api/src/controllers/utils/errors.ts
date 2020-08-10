@@ -1,6 +1,7 @@
 enum StatusCodes {
     BadRequest = 400,
     Unauthorized = 401,
+    Forbidden = 403,
     NotFound = 404,
     InternalServerError = 500,
 }
@@ -32,3 +33,4 @@ export const BadRequest = (message: string): GenericError => new GenericError(me
 export const InternalServerError = (message: string): GenericError => new GenericError(message, StatusCodes.InternalServerError)
 export const NotFound = (message: string): GenericError => new GenericError(message, StatusCodes.NotFound)
 export const Unauthorized = (message: string): GenericError => new GenericError(message, StatusCodes.Unauthorized)
+export const Forbidden = (message: string): GenericError => new GenericError(message, StatusCodes.Forbidden)

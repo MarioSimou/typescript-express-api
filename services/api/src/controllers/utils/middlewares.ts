@@ -1,9 +1,10 @@
 import express from 'express'
-import { BadRequest, NotFound, Unauthorized } from 'src/controllers/utils/errors'
+import { BadRequest, NotFound, Unauthorized, Forbidden } from 'src/controllers/utils/errors'
 import User from 'src/models/User'
 import Joi from '@hapi/joi'
-import { RequestInterface, jwtPayloadInterface } from 'src/types'
+import { RequestInterface, jwtPayloadInterface, requestPayload } from 'src/types'
 import jwt from 'jsonwebtoken'
+import { UserRole } from './enums'
 
 type middlewareHandler = (req: RequestInterface, res: express.Response, next: express.NextFunction) => void
 type middlewareHandlers = Array<middlewareHandler>
@@ -40,12 +41,11 @@ export const validateRequestParams = (Schema: Joi.Schema) => (req: RequestInterf
  
 export const userLookup = (getLookupId: Function ) => async (req: RequestInterface, res: express.Response, next: express.NextFunction) => {
     const user = await User.findById(getLookupId(req))
+
     if(!user){
         throw NotFound('User not found')
     }
-    if(req.locals){
-        req.locals.user = user
-    }
+    req.locals = <requestPayload>{ ...req.locals, user }
 }
 
 export const validateUserToken = async (req: RequestInterface, res: express.Response, next: express.NextFunction) => {
@@ -55,10 +55,18 @@ export const validateUserToken = async (req: RequestInterface, res: express.Resp
         const jwtSecret: string = <string>process.env.JWT_SECRET
         const payload: jwtPayloadInterface = <jwtPayloadInterface>await jwt.verify(token, jwtSecret)
 
-        if(req.locals){
-            req.locals.jwtPayload = payload
-        }
+        req.locals = <requestPayload>{...req.locals, jwtPayload: payload}
     }catch(e){
         throw Unauthorized('Invalid user token')
     }
+}
+
+export const validatePutDeleteRole = async (req: RequestInterface, res: express.Response, next: express.NextFunction) => {
+    const { user, jwtPayload} = <requestPayload>req.locals
+
+    if(jwtPayload.role === UserRole.Admin || user.email === jwtPayload.email){
+        return
+    }
+
+    throw Forbidden('User does not have the right permissions')
 }

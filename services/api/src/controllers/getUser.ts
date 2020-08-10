@@ -1,9 +1,10 @@
 import express from 'express'
 import * as i from 'src/controllers/utils/interfaces'
-import User from 'src/models/User'
+import {UserRole} from 'src/controllers/utils/enums'
+import User, {UserInterface} from 'src/models/User'
 import Joi from '@hapi/joi'
 import * as middlewares from 'src/controllers/utils/middlewares'
-import { RequestInterface } from 'src/types'
+import { RequestInterface, requestPayload } from 'src/types'
 
 const requestParamsValidationSchema = Joi.object({
     id: Joi.string().required().hex().length(24)
@@ -11,8 +12,7 @@ const requestParamsValidationSchema = Joi.object({
 
 const getUser = async (req: RequestInterface, res: express.Response, next: express.NextFunction) => {
     try {
-        const user = await User.findById(req.params.id)
-
+        const { user } = <requestPayload>req.locals
         const response: i.Response = {
             status: 200,
             success: true,
